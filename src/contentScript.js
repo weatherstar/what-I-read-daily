@@ -1,43 +1,63 @@
-'use strict';
+"use strict";
 
-// Content script file will run in the context of web page.
-// With content script you can manipulate the web pages using
-// Document Object Model (DOM).
-// You can also pass information to the parent extension.
+import { MESSAGE_TYPE, COMMAND_TYPE } from "./constants";
+import { getFormattedToday } from "./utils/time";
 
-// We execute this script by making an entry in manifest.json file
-// under `content_scripts` property
+function buildReadingList(content, listItem) {
+  const today = getFormattedToday();
 
-// For more information on Content Scripts,
-// See https://developer.chrome.com/extensions/content_scripts
+  try {
+    const contentWrapper = document.createElement("div");
+    contentWrapper.innerHTML = content;
+    const title = contentWrapper.querySelector('h1');
+    const section = contentWrapper.querySelector(`#reading-list-${today}`);
 
-// Log `title` of current active web page
-const pageTitle = document.head.getElementsByTagName('title')[0].innerHTML;
-console.log(
-  `Page title is: '${pageTitle}' - evaluated by Chrome extension's 'contentScript.js' file`
-);
+    if(!title){
+      const title = document.createElement('h1');
+      title.innerText = 'What I read daily';
+      contentWrapper.prepend(title);
+    }
 
-// Communicate with background file by sending a message
-chrome.runtime.sendMessage(
-  {
-    type: 'GREETINGS',
-    payload: {
-      message: 'Hello, my name is Con. I am from ContentScript.',
-    },
-  },
-  response => {
-    console.log(response.message);
+    if (section) {
+      const list = section.querySelector("ul");
+      const listItemWrapper = document.createElement("div");
+      listItemWrapper.innerHTML = `<li><samp>${listItem}</samp></li>`;
+      list.prepend(listItemWrapper.firstElementChild);
+    } else {
+      const section = document.createElement("section");
+      section.id = `reading-list-${today}`;
+      const sectionTitle = document.createElement("h4");
+      sectionTitle.innerText = today;
+      const list = document.createElement("ul");
+      const listItemWrapper = document.createElement("div");
+      listItemWrapper.innerHTML = `<li><samp>${listItem}</samp></li>`;
+      list.append(listItemWrapper.firstElementChild);
+      section.append(sectionTitle);
+      section.append(list);
+      contentWrapper.insertBefore(section, contentWrapper.querySelector('h1').nextSibling);
+    }
+
+    return contentWrapper.innerHTML;
+  } catch (e) {
+    return file;
   }
-);
+}
 
 // Listen for message
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === 'COUNT') {
-    console.log(`Current count is ${request.payload.count}`);
+chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
+  switch (request.type) {
+    case MESSAGE_TYPE.COMMAND:
+      switch (request.command) {
+        case COMMAND_TYPE.BUILD_READING_LIST:
+          const { content, listItem } = request.payload;
+          sendResponse({ content: buildReadingList(content, listItem) });
+          break;
+        default:
+          sendResponse({});
+      }
+      break;
+    default:
+      sendResponse({});
   }
-
-  // Send an empty response
-  // See https://github.com/mozilla/webextension-polyfill/issues/130#issuecomment-531531890
-  sendResponse({});
   return true;
 });
