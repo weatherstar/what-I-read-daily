@@ -1,6 +1,6 @@
 'use strict';
 
-import './popup.css';
+import './styles/popup.css';
 
 (function() {
   // We will make use of Storage API to get and store `count` value
