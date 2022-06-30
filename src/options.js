@@ -3,42 +3,46 @@ import "bootstrap/dist/css/bootstrap.css";
 import { GITHUB_CONFIGS } from "./constants";
 
 let githubConfigsForm = null;
+let githubConfigInputs = null;
 
-function handleGithubConfigFormOnSubmit(e) {
-  e.preventDefault();
-  let githubConfigs = {};
-  Array.from(githubConfigsForm.querySelectorAll("input[name]")).forEach(
-    (input) => {
-      githubConfigs[input.name] = input.value;
-    }
-  );
-  chrome.storage.local.set(githubConfigs);
+document.addEventListener("DOMContentLoaded", function () {
+  init();
+});
+
+function init() {
+  initElements();
+  bindEvents();
+  getConfigs();
+}
+
+function initElements() {
+  githubConfigsForm = document.querySelector("#github-configs");
+  githubConfigInputs =Array.from(githubConfigsForm.querySelectorAll('input[name]'));
 }
 
 function bindEvents() {
   githubConfigsForm.addEventListener("submit", handleGithubConfigFormOnSubmit);
 }
 
-function initElements() {
-  githubConfigsForm = document.querySelector("#github-configs");
-}
-
-function init() {
-  initElements();
-  bindEvents();
-  setGithubConfigs();
-}
-
-function setGithubConfigs() {
-  chrome.storage.local.get(Object.values(GITHUB_CONFIGS), function (result) {
-    Array.from(githubConfigsForm.querySelectorAll("input[name]")).forEach(
-      (input) => {
-        input.value = result[input.name] || "";
-      }
-    );
+function getConfigs() {
+  chrome.storage.local.get('githubConfigs', function (result) {
+    if(result.githubConfigs){
+      githubConfigInputs.forEach(
+        (input) => {
+          input.value = result.githubConfigs[input.name] || "";
+        }
+      );
+    }
   });
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  init();
-});
+function handleGithubConfigFormOnSubmit(e) {
+  e.preventDefault();
+  let githubConfigs = {};
+  githubConfigInputs.forEach(
+    (input) => {
+      githubConfigs[input.name] = input.value;
+    }
+  );
+  chrome.storage.local.set({githubConfigs});
+}
