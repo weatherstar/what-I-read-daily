@@ -56,6 +56,12 @@ function bindEvents() {
       githubConfigs = { ...githubConfigs, ...changes.githubConfigs.newValue };
     }
   });
+
+  chrome.runtime.onInstalled.addListener((details) => {
+    if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
+      chrome.runtime.openOptionsPage();
+    }
+  });
 }
 
 function createContextMenu() {
@@ -100,13 +106,16 @@ async function handleAddToListOnClick(_, tab) {
   const { title, url } = tab;
   const listItem = `<a href=${url} target="_blank">${title}</a>`;
   const [content, sha] = await buildFileContent(listItem, tab);
-  try{
+  try {
     await updateDailyReadingList(content.trim(), sha);
-    sendSuccessMessageToContent({
-      message: 'Successfully added to daily reading list.'
-    }, tab)
-  }catch(e){
-    console.log(e)
+    sendSuccessMessageToContent(
+      {
+        message: "Successfully added to daily reading list.",
+      },
+      tab
+    );
+  } catch (e) {
+    console.log(e);
   }
 }
 
