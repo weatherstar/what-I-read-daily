@@ -1,10 +1,14 @@
 "use strict";
 
 import { Octokit } from "@octokit/core";
-import { encode, decode } from 'js-base64';
+import { encode, decode } from "js-base64";
 
 import { COMMAND_TYPE, DEFAULT_TARGET_FILE_NAME } from "./constants";
-import { sendCommandMessageToContent, sendErrorMessageToContent } from "./utils/message";
+import {
+  sendCommandMessageToContent,
+  sendErrorMessageToContent,
+  sendSuccessMessageToContent,
+} from "./utils/message";
 import { getFormattedToday } from "./utils/time";
 
 let githubConfigs = {};
@@ -18,20 +22,19 @@ function init() {
   createContextMenu();
 }
 
-
 function getConfigs() {
-  chrome.storage.local.get('githubConfigs', (result) => {
+  chrome.storage.local.get("githubConfigs", (result) => {
     githubConfigs = result.githubConfigs || {};
     createOctokit();
   });
 }
 
-function getGithubContentAPIBaseConfigs(){
+function getGithubContentAPIBaseConfigs() {
   return {
     owner: githubConfigs.username,
     repo: githubConfigs.username,
     path: `${githubConfigs.targetFileName || DEFAULT_TARGET_FILE_NAME}.md`,
-  }
+  };
 }
 
 function bindEvents() {
@@ -43,13 +46,16 @@ function bindEvents() {
   });
 
   chrome.storage.onChanged.addListener((changes) => {
-    if(changes.githubConfigs && changes.githubConfigs.newValue){
-      if(changes.githubConfigs.newValue.personalAccessToken !== githubConfigs.personalAccessToken){
+    if (changes.githubConfigs && changes.githubConfigs.newValue) {
+      if (
+        changes.githubConfigs.newValue.personalAccessToken !==
+        githubConfigs.personalAccessToken
+      ) {
         createOctokit();
       }
-      githubConfigs = {...githubConfigs, ...changes.githubConfigs.newValue};
+      githubConfigs = { ...githubConfigs, ...changes.githubConfigs.newValue };
     }
-  })
+  });
 }
 
 function createContextMenu() {
@@ -69,11 +75,10 @@ function createContextMenu() {
 }
 
 function createOctokit() {
-  if(githubConfigs && githubConfigs.personalAccessToken){
+  if (githubConfigs && githubConfigs.personalAccessToken) {
     octokit = new Octokit({ auth: githubConfigs.personalAccessToken });
   }
 }
-
 
 async function fetchTargetFileContent() {
   try {
@@ -88,20 +93,27 @@ async function fetchTargetFileContent() {
 }
 
 async function handleAddToListOnClick(_, tab) {
-  if(!checkConfigs()){
-    sendErrorMessageToContent('请完善 Github 配置，否则无法使用', tab)
+  if (!checkConfigs()) {
+    sendErrorMessageToContent("请完善 Github 配置，否则无法使用", tab);
     return;
   }
   const { title, url } = tab;
   const listItem = `<a href=${url} target="_blank">${title}</a>`;
   const [content, sha] = await buildFileContent(listItem, tab);
-  updateDailyReadingList(content.trim(), sha);
+  try{
+    await updateDailyReadingList(content.trim(), sha);
+    sendSuccessMessageToContent({
+      message: 'Successfully added to daily reading list.'
+    }, tab)
+  }catch(e){
+    console.log(e)
+  }
 }
 
 function checkConfigs() {
-  if(!githubConfigs.username) return false;
-  if(!githubConfigs.personalAccessToken) return false;
-  if(!octokit) return false;
+  if (!githubConfigs.username) return false;
+  if (!githubConfigs.personalAccessToken) return false;
+  if (!octokit) return false;
   return true;
 }
 
@@ -133,14 +145,10 @@ async function buildFileContent(listItem, tab) {
 }
 
 async function updateDailyReadingList(content, sha) {
-  try {
-    octokit.request("PUT /repos/{owner}/{repo}/contents/{path}", {
-      ...getGithubContentAPIBaseConfigs(),
-      message: "update reading list",
-      content: encode(content),
-      sha,
-    });
-  } catch (e) {
-    console.log(e);
-  }
+  return octokit.request("PUT /repos/{owner}/{repo}/contents/{path}", {
+    ...getGithubContentAPIBaseConfigs(),
+    message: "update reading list",
+    content: encode(content),
+    sha,
+  });
 }

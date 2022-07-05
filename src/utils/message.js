@@ -25,6 +25,18 @@ export function sendErrorMessageToContent(error, tab) {
   );
 }
 
+export function sendSuccessMessageToContent(message, tab) {
+  return sendMessageToContent(
+    {
+      type: MESSAGE_TYPE.SUCCESS,
+      payload: {
+        ...message,
+      },
+    },
+    tab
+  );
+}
+
 export function sendMessageToContent(message, tab) {
   return new Promise((resolve) => {
     if (tab && tab.id) {
@@ -32,7 +44,7 @@ export function sendMessageToContent(message, tab) {
         resolve(response);
       });
     } else {
-      chrome.tab.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         chrome.tabs.sendMessage(tabs[0].id, message, null, (response) => {
             resolve(response)
         });

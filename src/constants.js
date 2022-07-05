@@ -2,6 +2,7 @@ export const DEFAULT_TARGET_FILE_NAME = 'WHAT_I_READ_DAILY';
 
 export const MESSAGE_TYPE = {
     ERROR: 'error',
+    SUCCESS: 'success',
     COMMAND: 'command',
 }
 
