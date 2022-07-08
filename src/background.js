@@ -100,7 +100,9 @@ async function fetchTargetFileContent() {
 
 async function handleAddToListOnClick(_, tab) {
   if (!checkConfigs()) {
-    sendErrorMessageToContent("请完善 Github 配置，否则无法使用", tab);
+    sendErrorMessageToContent({
+      message: "请完善 Github 配置，否则无法使用"
+    }, tab);
     return;
   }
   const { title, url } = tab;
@@ -115,7 +117,12 @@ async function handleAddToListOnClick(_, tab) {
       tab
     );
   } catch (e) {
-    console.log(e);
+    sendErrorMessageToContent(
+      {
+        message: e.response.data.message,
+      },
+      tab
+    );
   }
 }
 

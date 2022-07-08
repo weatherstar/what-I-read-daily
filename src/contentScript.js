@@ -53,6 +53,11 @@ function handleSuccessMessage(payload) {
   showMessage(MESSAGE_TYPE.SUCCESS, message);
 }
 
+function handleErrorMessage(payload) {
+  const { message } = payload;
+  showMessage(MESSAGE_TYPE.ERROR, message);
+}
+
 function getMessageStyleBasedOnType(type) {
   switch (type) {
     case MESSAGE_TYPE.ERROR:
@@ -132,6 +137,9 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
       break;
     case MESSAGE_TYPE.SUCCESS:
       handleSuccessMessage(request.payload);
+      break;
+    case MESSAGE_TYPE.ERROR:
+      handleErrorMessage(request.payload);
     default:
       sendResponse({});
   }
