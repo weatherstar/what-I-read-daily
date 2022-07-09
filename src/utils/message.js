@@ -13,6 +13,18 @@ export function sendCommandMessageToContent(data, command, tab) {
   );
 }
 
+export function sendInfoMessageToContent(info, tab) {
+  return sendMessageToContent(
+    {
+      type: MESSAGE_TYPE.INFO,
+      payload: {
+        ...info,
+      },
+    },
+    tab
+  );
+}
+
 export function sendErrorMessageToContent(error, tab) {
   return sendMessageToContent(
     {

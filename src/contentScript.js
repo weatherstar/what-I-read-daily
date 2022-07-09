@@ -2,6 +2,7 @@
 
 import { MESSAGE_TYPE, COMMAND_TYPE } from "./constants";
 import { getFormattedToday } from "./utils/time";
+let messageIndex = 0;
 
 const MESSAGE_BOX_ID = "what-i-read-daily-message-box";
 
@@ -48,14 +49,39 @@ function buildReadingList(content, listItem) {
   }
 }
 
+function handleInfoMessage(payload) {
+  const { message, persistent } = payload;
+  return showMessage(MESSAGE_TYPE.INFO, message, persistent);
+}
+
 function handleSuccessMessage(payload) {
-  const { message } = payload;
-  showMessage(MESSAGE_TYPE.SUCCESS, message);
+  const { message, persistent } = payload;
+  return showMessage(MESSAGE_TYPE.SUCCESS, message, persistent);
 }
 
 function handleErrorMessage(payload) {
-  const { message } = payload;
-  showMessage(MESSAGE_TYPE.ERROR, message);
+  const { message, persistent } = payload;
+  return showMessage(MESSAGE_TYPE.ERROR, message, persistent);
+}
+
+function handleHideMessage(messageId) {
+  if (messageId) {
+    const message = document.querySelector(`#${messageId}`);
+    if (message) {
+      hideMessage(message);
+    }
+  } else {
+    const messageBox = document.querySelector(`#${MESSAGE_BOX_ID}`);
+    messageBox.remove();
+  }
+}
+
+function hideMessage(message) {
+  message.style.opacity = 0;
+  setTimeout(() => {
+    message.remove();
+    message = null;
+  }, 300);
 }
 
 function getMessageStyleBasedOnType(type) {
@@ -81,7 +107,7 @@ function getMessageStyleBasedOnType(type) {
   }
 }
 
-function showMessage(type, message) {
+function showMessage(type, message, persistent) {
   let messageBox = document.querySelector(`#${MESSAGE_BOX_ID}`);
   if (!messageBox) {
     messageBox = document.createElement("div");
@@ -94,32 +120,35 @@ function showMessage(type, message) {
     document.body.append(messageBox);
   }
 
+  messageIndex++;
+
   let messageItem = document.createElement("div");
   messageItem.style.border = "1px soild #ddd";
   messageItem.style.borderRadius = "4px";
   messageItem.style.padding = "10px";
   messageItem.style.marginTop = "10px";
   messageItem.style.opacity = 0;
-  messageItem.style.transition ='all .3s ease';
+  messageItem.style.transition = "all .3s ease";
   messageItem.innerText = message;
-
-  const { color, borderColor, backgroundColor } = getMessageStyleBasedOnType(type);
+  messageItem.id = `what-i-read-daily-message-${messageIndex}`;
+  const { color, borderColor, backgroundColor } =
+    getMessageStyleBasedOnType(type);
 
   messageItem.style.color = color;
   messageItem.style.borderColor = borderColor;
   messageItem.style.backgroundColor = backgroundColor;
 
-  messageBox.append(messageItem)
+  messageBox.append(messageItem);
   window.requestAnimationFrame(() => {
     messageItem.style.opacity = 1;
   });
-  setTimeout(() => {
-    messageItem.style.opacity = 0;
+  if (persistent) {
+    return messageItem.id;
+  } else {
     setTimeout(() => {
-      messageItem.remove();
-      messageItem = null;
-    }, 300)
-  }, 3000)
+      hideMessage(messageItem);
+    }, 3000);
+  }
 }
 
 // Listen for message
@@ -131,15 +160,23 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
           const { content, listItem } = request.payload;
           sendResponse({ content: buildReadingList(content, listItem) });
           break;
+        case COMMAND_TYPE.HIDE_MESSAGE:
+          const { messageId } = request.payload;
+          handleHideMessage(messageId);
+          sendResponse({ messageId });
+          break;
         default:
           sendResponse({});
       }
       break;
     case MESSAGE_TYPE.SUCCESS:
-      handleSuccessMessage(request.payload);
+      sendResponse({ messageId: handleSuccessMessage(request.payload) });
       break;
     case MESSAGE_TYPE.ERROR:
-      handleErrorMessage(request.payload);
+      sendResponse({ messageId: handleErrorMessage(request.payload) });
+      break;
+    case MESSAGE_TYPE.INFO:
+      sendResponse({ messageId: handleInfoMessage(request.payload) });
     default:
       sendResponse({});
   }

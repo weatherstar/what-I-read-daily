@@ -8,6 +8,7 @@ import {
   sendCommandMessageToContent,
   sendErrorMessageToContent,
   sendSuccessMessageToContent,
+  sendInfoMessageToContent,
 } from "./utils/message";
 import { getFormattedToday } from "./utils/time";
 
@@ -100,14 +101,21 @@ async function fetchTargetFileContent() {
 
 async function handleAddToListOnClick(_, tab) {
   if (!checkConfigs()) {
-    sendErrorMessageToContent({
-      message: "请完善 Github 配置，否则无法使用"
-    }, tab);
+    sendErrorMessageToContent(
+      {
+        message: "请完善 Github 配置，否则无法使用",
+      },
+      tab
+    );
     return;
   }
   const { title, url } = tab;
   const listItem = `<a href=${url} target="_blank">${title}</a>`;
   const [content, sha] = await buildFileContent(listItem, tab);
+  const { messageId } = await sendInfoMessageToContent(
+    { message: "保存中", persistent: true },
+    tab
+  );
   try {
     await updateDailyReadingList(content.trim(), sha);
     sendSuccessMessageToContent(
@@ -124,6 +132,8 @@ async function handleAddToListOnClick(_, tab) {
       tab
     );
   }
+
+  sendCommandMessageToContent({ messageId }, COMMAND_TYPE.HIDE_MESSAGE, tab);
 }
 
 function checkConfigs() {
