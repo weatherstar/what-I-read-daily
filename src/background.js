@@ -109,6 +109,7 @@ async function handleAddToListOnClick(_, tab) {
     );
     return;
   }
+
   const pageInfo = await sendCommandMessageToContent(
     {},
     COMMAND_TYPE.GET_PAGE_INFO
@@ -123,7 +124,7 @@ async function handleAddToListOnClick(_, tab) {
     <samp><p>${pageInfo.description}</p><samp>
   </details>`;
   }
-  
+
   const [content, sha] = await buildFileContent(listItem, tab);
   const { messageId } = await sendInfoMessageToContent(
     { message: "保存中", persistent: true },

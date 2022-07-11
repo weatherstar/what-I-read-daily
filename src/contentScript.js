@@ -65,7 +65,7 @@ function getPageInfo() {
     author: (author && author.content) || "",
     description: (description && description.content) || "",
     image: (image && image.content) || "",
-    url
+    url,
   };
 }
 
@@ -97,11 +97,12 @@ function handleHideMessage(messageId) {
 }
 
 function hideMessage(message) {
+  message.style.transition = 'all .3s ease';
   message.style.opacity = 0;
   setTimeout(() => {
     message.remove();
     message = null;
-  }, 300);
+  }, 500);
 }
 
 function getMessageStyleBasedOnType(type) {
@@ -131,34 +132,25 @@ function showMessage(type, message, persistent) {
   let messageBox = document.querySelector(`#${MESSAGE_BOX_ID}`);
   if (!messageBox) {
     messageBox = document.createElement("div");
-    messageBox.style.with = "200px";
-    messageBox.style.position = "fixed";
-    messageBox.style.bottom = "20px";
-    messageBox.style.right = "20px";
-    messageBox.style.zIndex = "999999";
-    messageBox.id = MESSAGE_BOX_ID;
+    messageBox.innerHTML = `<div id="${MESSAGE_BOX_ID}" style="position: fixed; bottom: 20px; right: 20px; z-index: 999999;"></div>`;
+    messageBox = messageBox.firstElementChild;
     document.body.append(messageBox);
   }
 
   messageIndex++;
 
   let messageItem = document.createElement("div");
-  messageItem.style.border = "1px soild #ddd";
-  messageItem.style.borderRadius = "4px";
-  messageItem.style.padding = "10px";
-  messageItem.style.marginTop = "10px";
-  messageItem.style.opacity = 0;
-  messageItem.style.transition = "all .3s ease";
-  messageItem.innerText = message;
-  messageItem.id = `what-i-read-daily-message-${messageIndex}`;
   const { color, borderColor, backgroundColor } =
     getMessageStyleBasedOnType(type);
+  messageItem.innerHTML = `<div id="what-i-read-daily-message-${messageIndex}" style="opacity: 0; margin-top: 10px; height: 44px; text-align: right;transition: all .5s ease;">
+    <span style="border: 1px solid ${borderColor};border-radius: 4px; padding: 10px; background: ${backgroundColor}; color: ${color}">
+    ${message}
+    </span>
+  </div>`;
 
-  messageItem.style.color = color;
-  messageItem.style.borderColor = borderColor;
-  messageItem.style.backgroundColor = backgroundColor;
+  messageItem = messageItem.firstElementChild;
 
-  messageBox.append(messageItem);
+  messageBox.prepend(messageItem);
   window.requestAnimationFrame(() => {
     messageItem.style.opacity = 1;
   });
