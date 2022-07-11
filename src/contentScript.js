@@ -24,7 +24,7 @@ function buildReadingList(content, listItem) {
     if (section) {
       const list = section.querySelector("ul");
       const listItemWrapper = document.createElement("div");
-      listItemWrapper.innerHTML = `<li><samp>${listItem}</samp></li>`;
+      listItemWrapper.innerHTML = `<li>${listItem}</li>`;
       list.prepend(listItemWrapper.firstElementChild);
     } else {
       const section = document.createElement("section");
@@ -33,7 +33,7 @@ function buildReadingList(content, listItem) {
       sectionTitle.innerText = today;
       const list = document.createElement("ul");
       const listItemWrapper = document.createElement("div");
-      listItemWrapper.innerHTML = `<li><samp>${listItem}</samp></li>`;
+      listItemWrapper.innerHTML = `<li>${listItem}</li>`;
       list.append(listItemWrapper.firstElementChild);
       section.append(sectionTitle);
       section.append(list);
@@ -47,6 +47,26 @@ function buildReadingList(content, listItem) {
   } catch (e) {
     return file;
   }
+}
+
+function getPageInfo() {
+  const h1 = document.querySelector("h1");
+  const title = document.querySelector("title");
+  const author = document.querySelector('meta[name="author"]');
+  const description = document.querySelector('meta[name="description"]');
+  const image =
+    document.querySelector('meta[property="og:image"]') ||
+    document.querySelector('meta[property="og:twitter"]');
+  const url = window.location.href;
+
+  return {
+    h1: (h1 && h1.innerText) || "",
+    title: (title && title.innerText) || "",
+    author: (author && author.content) || "",
+    description: (description && description.content) || "",
+    image: (image && image.content) || "",
+    url
+  };
 }
 
 function handleInfoMessage(payload) {
@@ -159,6 +179,9 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
         case COMMAND_TYPE.BUILD_READING_LIST:
           const { content, listItem } = request.payload;
           sendResponse({ content: buildReadingList(content, listItem) });
+          break;
+        case COMMAND_TYPE.GET_PAGE_INFO:
+          sendResponse(getPageInfo());
           break;
         case COMMAND_TYPE.HIDE_MESSAGE:
           const { messageId } = request.payload;

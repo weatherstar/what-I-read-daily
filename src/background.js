@@ -109,8 +109,21 @@ async function handleAddToListOnClick(_, tab) {
     );
     return;
   }
-  const { title, url } = tab;
-  const listItem = `<a href=${url} target="_blank">${title}</a>`;
+  const pageInfo = await sendCommandMessageToContent(
+    {},
+    COMMAND_TYPE.GET_PAGE_INFO
+  );
+  let listItem = `<samp><a href=${pageInfo.url || tab.url} target="_blank">${
+    pageInfo.h1 || pageInfo.title || tab.title
+  }</a></samp>`;
+
+  if (pageInfo.description) {
+    listItem = `<details>
+    <summary>${listItem}</summary>
+    <samp><p>${pageInfo.description}</p><samp>
+  </details>`;
+  }
+  
   const [content, sha] = await buildFileContent(listItem, tab);
   const { messageId } = await sendInfoMessageToContent(
     { message: "保存中", persistent: true },

@@ -8,6 +8,7 @@ export const MESSAGE_TYPE = {
 }
 
 export const COMMAND_TYPE = {
+    GET_PAGE_INFO: 'getPageInfo',
     BUILD_READING_LIST: 'buildReadingList',
     HIDE_MESSAGE: 'hideMessage'
 }
