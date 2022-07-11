@@ -114,7 +114,7 @@ async function handleAddToListOnClick(_, tab) {
     {},
     COMMAND_TYPE.GET_PAGE_INFO
   );
-  let listItem = `<samp><a href=${pageInfo.url || tab.url} target="_blank">${
+  let listItem = `<samp><a href=${tab.url} target="_blank">${
     pageInfo.h1 || pageInfo.title || tab.title
   }</a></samp>`;
 
@@ -125,12 +125,13 @@ async function handleAddToListOnClick(_, tab) {
   </details>`;
   }
 
-  const [content, sha] = await buildFileContent(listItem, tab);
   const { messageId } = await sendInfoMessageToContent(
     { message: "保存中", persistent: true },
     tab
   );
+
   try {
+    const [content, sha] = await buildFileContent(listItem, tab);
     await updateDailyReadingList(content.trim(), sha);
     sendSuccessMessageToContent(
       {
@@ -160,6 +161,16 @@ function checkConfigs() {
 async function buildFileContent(listItem, tab) {
   const [content, sha] = await fetchTargetFileContent();
   if (content !== null) {
+    if (content.includes(tab.url)) {
+      return Promise.reject({
+        response: {
+          data: {
+            message: "重复文章",
+          },
+        },
+      });
+    }
+
     const resp = await sendCommandMessageToContent(
       {
         content,

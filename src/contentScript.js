@@ -97,8 +97,6 @@ function handleHideMessage(messageId) {
 }
 
 function hideMessage(message) {
-  message.style.transition = 'all .3s ease';
-  message.style.opacity = 0;
   setTimeout(() => {
     message.remove();
     message = null;
