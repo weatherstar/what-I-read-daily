@@ -1,112 +1,62 @@
 'use strict';
 
-import './styles/popup.css';
+import "bootstrap/dist/css/bootstrap.css";
+import "./styles/popup.css";
 
-(function() {
-  // We will make use of Storage API to get and store `count` value
-  // More information on Storage API can we found at
-  // https://developer.chrome.com/extensions/storage
+import { COMMAND_TYPE } from './constants'
+import { buildReadingList } from './utils/common'
+import { sendCommandMessageToContent,sendCommandMessageToBackground } from './utils/message'
 
-  // To get storage access, we have to mention it in `permissions` property of manifest.json file
-  // More information on Permissions can we found at
-  // https://developer.chrome.com/extensions/declare_permissions
-  const counterStorage = {
-    get: cb => {
-      chrome.storage.sync.get(['count'], result => {
-        cb(result.count);
-      });
-    },
-    set: (value, cb) => {
-      chrome.storage.sync.set(
-        {
-          count: value,
-        },
-        () => {
-          cb();
-        }
-      );
-    },
-  };
+let submitting = false;
 
-  function setupCounter(initialValue = 0) {
-    document.getElementById('counter').innerHTML = initialValue;
+let addToListBtn;
+let pageInfoForm;
 
-    document.getElementById('incrementBtn').addEventListener('click', () => {
-      updateCounter({
-        type: 'INCREMENT',
-      });
-    });
+function init() {
+  addToListBtn = document.querySelector('#add-to-list');
+  pageInfoForm = document.querySelector('#page-info-form');
+  bindEvents()
+  fetchPageInfo();  
+}
 
-    document.getElementById('decrementBtn').addEventListener('click', () => {
-      updateCounter({
-        type: 'DECREMENT',
-      });
-    });
-  }
+function bindEvents() {
+  pageInfoForm.addEventListener('submit', handlePageInfoOnSubmit);
+}
 
-  function updateCounter({ type }) {
-    counterStorage.get(count => {
-      let newCount;
-
-      if (type === 'INCREMENT') {
-        newCount = count + 1;
-      } else if (type === 'DECREMENT') {
-        newCount = count - 1;
-      } else {
-        newCount = count;
-      }
-
-      counterStorage.set(newCount, () => {
-        document.getElementById('counter').innerHTML = newCount;
-
-        // Communicate with content script of
-        // active tab by sending a message
-        chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-          const tab = tabs[0];
-
-          chrome.tabs.sendMessage(
-            tab.id,
-            {
-              type: 'COUNT',
-              payload: {
-                count: newCount,
-              },
-            },
-            response => {
-              console.log('Current count value passed to contentScript file');
-            }
-          );
-        });
-      });
-    });
-  }
-
-  function restoreCounter() {
-    // Restore count value
-    counterStorage.get(count => {
-      if (typeof count === 'undefined') {
-        // Set counter value as 0
-        counterStorage.set(0, () => {
-          setupCounter(0);
-        });
-      } else {
-        setupCounter(count);
-      }
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', restoreCounter);
-
-  // Communicate with background file by sending a message
-  chrome.runtime.sendMessage(
-    {
-      type: 'GREETINGS',
-      payload: {
-        message: 'Hello, my name is Pop. I am from Popup.',
-      },
-    },
-    response => {
-      console.log(response.message);
-    }
+async function fetchPageInfo() {
+  const pageInfo = await sendCommandMessageToContent(
+    {},
+    COMMAND_TYPE.GET_PAGE_INFO
   );
-})();
+
+  document.querySelector('#title').value = pageInfo.h1 || pageInfo.title;
+  document.querySelector('#description').textContent = pageInfo.description;
+}
+
+
+async function handlePageInfoOnSubmit(e) {
+  e.preventDefault();
+
+  if(submitting) return;
+
+  let formData = {};
+  for(let item of new FormData(e.target).entries()){
+    formData[item[0]] = (item[1] || '').trim();
+  }
+
+  submitting = true;
+
+  try{
+    await sendCommandMessageToBackground({
+      command: COMMAND_TYPE.GET_READING_LIST,
+      padyload: formData
+    })
+  }catch(e) {
+    console.log(e)
+  }
+
+  submitting = false;
+}
+
+
+document.addEventListener('DOMContentLoaded', init);

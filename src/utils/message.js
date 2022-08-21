@@ -49,6 +49,22 @@ export function sendSuccessMessageToContent(message, tab) {
   );
 }
 
+export function sendCommandMessageToBackground(message) {
+  return sendMessageToBackground({
+    ...message,
+    type: MESSAGE_TYPE.COMMAND
+  });
+}
+
+export function sendMessageToBackground(message) {
+  chrome.runtime.sendMessage(message, (response) => {
+    if(response.type === MESSAGE_TYPE.ERROR){
+      return Promise.reject(response)
+    }
+    return Promise.resolve(response);
+  })
+}
+
 export function sendMessageToContent(message, tab) {
   return new Promise((resolve) => {
     if (tab && tab.id) {

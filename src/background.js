@@ -3,7 +3,11 @@
 import { Octokit } from "@octokit/core";
 import { encode, decode } from "js-base64";
 
-import { COMMAND_TYPE, DEFAULT_TARGET_FILE_NAME } from "./constants";
+import {
+  COMMAND_TYPE,
+  MESSAGE_TYPE,
+  DEFAULT_TARGET_FILE_NAME,
+} from "./constants";
 import {
   sendCommandMessageToContent,
   sendErrorMessageToContent,
@@ -42,7 +46,7 @@ function bindEvents() {
   chrome.contextMenus.onClicked.addListener((info, tab) => {
     const { menuItemId } = info;
     if (menuItemId === "addToList") {
-      handleAddToListOnClick(info, tab);
+      addToReadingList(null, tab);
     }
   });
 
@@ -61,6 +65,28 @@ function bindEvents() {
   chrome.runtime.onInstalled.addListener((details) => {
     if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
       chrome.runtime.openOptionsPage();
+    }
+  });
+
+  chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
+    switch (message.type) {
+      case MESSAGE_TYPE.COMMAND_TYPE:
+        switch (message.command) {
+          case COMMAND_TYPE.ADD_TO_READING_LIST:
+            try{
+              await addToReadingList(message.payload);
+              sendResponse({
+                type: MESSAGE_TYPE.SUCCESS
+              })
+            }catch(e){
+              sendResponse({
+                type: MESSAGE_TYPE.ERROR
+              })
+            }
+            break;
+        }
+        break;
+      default:
     }
   });
 }
@@ -99,7 +125,7 @@ async function fetchTargetFileContent() {
   }
 }
 
-async function handleAddToListOnClick(_, tab) {
+async function addToReadingList(pageInfo, tab) {
   if (!checkConfigs()) {
     sendErrorMessageToContent(
       {
@@ -107,13 +133,16 @@ async function handleAddToListOnClick(_, tab) {
       },
       tab
     );
-    return;
+    return Promise.reject();
   }
 
-  const pageInfo = await sendCommandMessageToContent(
-    {},
-    COMMAND_TYPE.GET_PAGE_INFO
-  );
+  if (pageInfo) {
+    pageInfo = await sendCommandMessageToContent(
+      {},
+      COMMAND_TYPE.GET_PAGE_INFO
+    );
+  }
+
   let listItem = `<samp><a href=${tab.url} target="_blank">${
     pageInfo.h1 || pageInfo.title || tab.title
   }</a></samp>`;
@@ -139,6 +168,8 @@ async function handleAddToListOnClick(_, tab) {
       },
       tab
     );
+    sendCommandMessageToContent({ messageId }, COMMAND_TYPE.HIDE_MESSAGE, tab);
+    return Promise.reject();
   } catch (e) {
     sendErrorMessageToContent(
       {
@@ -146,9 +177,10 @@ async function handleAddToListOnClick(_, tab) {
       },
       tab
     );
+    sendCommandMessageToContent({ messageId }, COMMAND_TYPE.HIDE_MESSAGE, tab);
+    return Promise.reject();
   }
 
-  sendCommandMessageToContent({ messageId }, COMMAND_TYPE.HIDE_MESSAGE, tab);
 }
 
 function checkConfigs() {

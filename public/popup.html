@@ -7,26 +7,37 @@
 </head>
 <body>
   <div class="app">
-    <p class="counter-label">Counter</p>
-    <div id="counter" class="counter"></div>
-    <div class="button-container">
-      <button id="decrementBtn" class="button">-</button>
-      <button id="incrementBtn" class="button">+</button>
-    </div>
-
-    <hr class="divider" />
-
-    <p class="title">Chrome Extension is Ready!</p>
-    <p class="subtitle">Start by updating <code>popup.html</code></p>
-  </div>
+    <form id="page-info-form">
+      <div class="row mb-3">
+        <label for="title" class="col-sm-2 col-form-label">Title</label>
+        <div class="col-sm-10">
+          <input required name="title" type="text" class="form-control" id="title">
+        </div>
+      </div>
+      <div class="row mb-3">
+        <label for="title" class="col-sm-2 col-form-label">Description</label>
+        <div class="col-sm-10">
+          <textarea name="description" class="form-control" id="description"></textarea>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <label for="title" class="col-sm-2 col-form-label">Tag</label>
+        <div class="col-sm-10">
+          <input name="tag" type="text" class="form-control" id="tag" />
+        </div>
+      </div>
+      <div class="row mb-3">
+        <label for="title" class="col-sm-2 col-form-label">Comment</label>
+        <div class="col-sm-10">
+          <textarea name="comment" class="form-control" id="comment"></textarea>
+        </div>
+      </div>
+      <div class="d-grid gap-2">
+        <button id="add-to-list" class="btn btn-primary" type="submit">添加到今日阅读</button>
+      </div>
+    </form>
+  </di>
 
   <script src="popup.js"></script>
-
-  <!--
-    This HTML file opens when you click on icon from the toolbar.
-
-    To begin the development, run `npm run watch`.
-    To create a production bundle, use `npm run build`.
-  -->
 </body>
 </html>

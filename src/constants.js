@@ -9,8 +9,10 @@ export const MESSAGE_TYPE = {
 
 export const COMMAND_TYPE = {
     GET_PAGE_INFO: 'getPageInfo',
+    GET_READING_LIST: 'getReadingList',
     BUILD_READING_LIST: 'buildReadingList',
-    HIDE_MESSAGE: 'hideMessage'
+    HIDE_MESSAGE: 'hideMessage',
+    ADD_TO_READING_LIST: 'addToReadingList'
 }
 
 export const GITHUB_CONFIGS = {
