@@ -4,7 +4,6 @@ import "bootstrap/dist/css/bootstrap.css";
 import "./styles/popup.css";
 
 import { COMMAND_TYPE } from './constants'
-import { buildReadingList } from './utils/common'
 import { sendCommandMessageToContent,sendCommandMessageToBackground } from './utils/message'
 
 let submitting = false;

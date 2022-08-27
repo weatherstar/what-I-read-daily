@@ -1,6 +1,6 @@
 import { getFormattedToday } from './time'
 
-function buildReadingList(content, listItem) {
+export function buildReadingList(content, listItem) {
     const today = getFormattedToday();
   
     try {

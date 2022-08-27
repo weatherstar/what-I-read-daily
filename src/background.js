@@ -143,10 +143,11 @@ async function addToReadingList(pageInfo, tab) {
     );
   }
 
-  let listItem = `<samp><a href=${tab.url} target="_blank">${
-    pageInfo.h1 || pageInfo.title || tab.title
-  }</a></samp>`;
-
+  let listItem = `<samp>
+    <a href=${tab.url} target="_blank">${pageInfo.h1 || pageInfo.title || tab.title}</a>
+    ${pageInfo.tag ? pageInfo.tag.split(',').map(item => '<sub>#' + item + '</sub>') : ''}
+    ${pageInfo.comment ? '<blockquote>' + pageInfo.comment + '</blockquote>' : ''}</samp>`;
+    
   if (pageInfo.description) {
     listItem = `<details>
     <summary>${listItem}</summary>
