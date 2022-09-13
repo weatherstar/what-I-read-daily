@@ -1,7 +1,5 @@
 import "bootstrap/dist/css/bootstrap.css";
 
-import { GITHUB_CONFIGS } from "./constants";
-
 let githubConfigsForm = null;
 let githubConfigInputs = null;
 

@@ -10,6 +10,7 @@ let submitting = false;
 
 let addToListBtn;
 let pageInfoForm;
+let pageInfo;
 
 function init() {
   addToListBtn = document.querySelector('#add-to-list');
@@ -23,7 +24,7 @@ function bindEvents() {
 }
 
 async function fetchPageInfo() {
-  const pageInfo = await sendCommandMessageToContent(
+  pageInfo = await sendCommandMessageToContent(
     {},
     COMMAND_TYPE.GET_PAGE_INFO
   );
@@ -47,8 +48,12 @@ async function handlePageInfoOnSubmit(e) {
 
   try{
     await sendCommandMessageToBackground({
-      command: COMMAND_TYPE.GET_READING_LIST,
-      padyload: formData
+      command: COMMAND_TYPE.ADD_TO_READING_LIST,
+      payload: {
+        ...formData,
+        url: pageInfo.url
+
+      }
     })
   }catch(e) {
     console.log(e)

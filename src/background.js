@@ -68,20 +68,20 @@ function bindEvents() {
     }
   });
 
-  chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
+  chrome.runtime.onMessage.addListener(async (message, _, sendResponse) => {
     switch (message.type) {
-      case MESSAGE_TYPE.COMMAND_TYPE:
+      case MESSAGE_TYPE.COMMAND:
         switch (message.command) {
           case COMMAND_TYPE.ADD_TO_READING_LIST:
-            try{
-              await addToReadingList(message.payload);
+            try {
+              await addToReadingList(message.payload, { url: message.payload.url });
               sendResponse({
-                type: MESSAGE_TYPE.SUCCESS
-              })
-            }catch(e){
+                type: MESSAGE_TYPE.SUCCESS,
+              });
+            } catch (e) {
               sendResponse({
-                type: MESSAGE_TYPE.ERROR
-              })
+                type: MESSAGE_TYPE.ERROR,
+              });
             }
             break;
         }
@@ -136,22 +136,27 @@ async function addToReadingList(pageInfo, tab) {
     return Promise.reject();
   }
 
-  if (pageInfo) {
+  if (!pageInfo) {
     pageInfo = await sendCommandMessageToContent(
       {},
       COMMAND_TYPE.GET_PAGE_INFO
     );
   }
 
-  let listItem = `<samp>
-    <a href=${tab.url} target="_blank">${pageInfo.h1 || pageInfo.title || tab.title}</a>
-    ${pageInfo.tag ? pageInfo.tag.split(',').map(item => '<sub>#' + item + '</sub>') : ''}
-    ${pageInfo.comment ? '<blockquote>' + pageInfo.comment + '</blockquote>' : ''}</samp>`;
-    
+  let listItem = `<samp><a href=${tab.url} target="_blank">${
+    pageInfo.h1 || pageInfo.title || tab.title
+  }</a>${
+    pageInfo.tag
+      ? pageInfo.tag.split(",").map((item) => "<sub>#" + item + "</sub>")
+      : ""
+  }${
+    pageInfo.comment ? "<blockquote>" + pageInfo.comment + "</blockquote>" : ""
+  }</samp>`;
+
   if (pageInfo.description) {
     listItem = `<details>
     <summary>${listItem}</summary>
-    <samp><p>${pageInfo.description}</p><samp>
+    <samp><p>${pageInfo.description}</p></samp>
   </details>`;
   }
 
@@ -181,7 +186,6 @@ async function addToReadingList(pageInfo, tab) {
     sendCommandMessageToContent({ messageId }, COMMAND_TYPE.HIDE_MESSAGE, tab);
     return Promise.reject();
   }
-
 }
 
 function checkConfigs() {
