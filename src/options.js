@@ -15,7 +15,9 @@ function init() {
 
 function initElements() {
   githubConfigsForm = document.querySelector("#github-configs");
-  githubConfigInputs =Array.from(githubConfigsForm.querySelectorAll('input[name]'));
+  githubConfigInputs = Array.from(
+    githubConfigsForm.querySelectorAll("input[name]")
+  );
 }
 
 function bindEvents() {
@@ -23,13 +25,11 @@ function bindEvents() {
 }
 
 function getConfigs() {
-  chrome.storage.local.get('githubConfigs', function (result) {
-    if(result.githubConfigs){
-      githubConfigInputs.forEach(
-        (input) => {
-          input.value = result.githubConfigs[input.name] || "";
-        }
-      );
+  chrome.storage.local.get("githubConfigs", function (result) {
+    if (result.githubConfigs) {
+      githubConfigInputs.forEach((input) => {
+        input.value = result.githubConfigs[input.name] || "";
+      });
     }
   });
 }
@@ -37,10 +37,8 @@ function getConfigs() {
 function handleGithubConfigFormOnSubmit(e) {
   e.preventDefault();
   let githubConfigs = {};
-  githubConfigInputs.forEach(
-    (input) => {
-      githubConfigs[input.name] = input.value;
-    }
-  );
-  chrome.storage.local.set({githubConfigs});
+  githubConfigInputs.forEach((input) => {
+    githubConfigs[input.name] = input.value;
+  });
+  chrome.storage.local.set({ githubConfigs });
 }
